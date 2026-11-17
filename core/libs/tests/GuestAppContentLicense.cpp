@@ -99,6 +99,9 @@ int main() {
     errno = 71;
     Require(getGameTrialsFlag(reinterpret_cast<std::uint32_t*>(0x10)) == Parameter, "unwritable game trials flag pointer");
     Require(errno == 71, "errno modified by invalid pointer check");
+    errno = 72;
+    Require(getPftFlag(reinterpret_cast<std::uint32_t*>(0x10)) == Parameter, "unwritable pft flag pointer");
+    Require(errno == 72, "errno modified by invalid pft flag pointer check");
     Require(getPlayableStatus(0, &label, &status) == NotFound && getPlayableStatus(7, &label, &status) == NotFound && status == Untouched, "a playable status was given for unknown content");
     Require(getPlayableStatus(0, nullptr, &status) == Parameter && getPlayableStatus(0, &label, nullptr) == Parameter && status == Untouched, "a null argument was taken by the playable status");
 
