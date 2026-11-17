@@ -1145,18 +1145,31 @@ int APS5_VABI sceUserServiceGetUserGroupName(int groupIndex, char* name, std::si
     if (!UserGroupSlotExists(groupIndex)) {
         return USER_SERVICE_ERROR_INVALID_ARGUMENT;
     }
-    std::memset(name, 0, size);
+    const int savedErrno = errno;
+    const bool nameWritable = GuestWritable_nid_no_patch(name, size);
+    errno = savedErrno;
+    if (!nameWritable) {
+        return USER_SERVICE_ERROR_INVALID_ARGUMENT;
+    }
+    std::array<char, 129> local{};
     char path[64];
     std::snprintf(path, sizeof(path), "/system_data/priv/home/user_group_name.dat.%d", groupIndex);
+    bool named = false;
     const int descriptor = sceKernelOpen(path, 0, 0);
     if (descriptor >= 0) {
-        const std::int64_t bytesRead = sceKernelRead(descriptor, name, 128);
+        const std::int64_t bytesRead = sceKernelRead(descriptor, local.data(), 128);
         sceKernelClose(descriptor);
-        if (bytesRead > 0) {
-            return USER_SERVICE_OK;
-        }
+        named = bytesRead > 0;
     }
-    std::snprintf(name, size, "User Group %d", groupIndex + 1);
+    if (!named) {
+        local.fill(0);
+        std::snprintf(local.data(), local.size(), "User Group %d", groupIndex + 1);
+    }
+    const bool copied = GuestCopyOut_nid_no_patch(name, local.data(), local.size());
+    errno = savedErrno;
+    if (!copied) {
+        return USER_SERVICE_ERROR_INVALID_ARGUMENT;
+    }
     return USER_SERVICE_OK;
 }
 

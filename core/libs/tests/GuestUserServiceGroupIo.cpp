@@ -43,6 +43,9 @@ int main() {
     Require(sceUserServiceGetUserGroupName(INT_MAX, name, sizeof(name)) == USER_SERVICE_ERROR_INVALID_ARGUMENT);
     Require(sceUserServiceGetUserGroupName(INT_MIN, name, sizeof(name)) == USER_SERVICE_ERROR_INVALID_ARGUMENT);
     Require(opens == 0);
+    errno = 73;
+    Require(sceUserServiceGetUserGroupName(0, reinterpret_cast<char*>(0x10), sizeof(name)) == USER_SERVICE_ERROR_INVALID_ARGUMENT);
+    Require(errno == 73 && opens == 0);
     Require(sceUserServiceGetUserGroupName(0, name, sizeof(name)) == USER_SERVICE_OK);
     Require(std::strcmp(name, "Team") == 0 && closes == 1);
     readResult = 0;
