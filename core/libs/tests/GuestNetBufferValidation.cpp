@@ -64,6 +64,13 @@ int main() {
                 std::uint32_t size = sizeof(value);
                 Require(sceNetGetsockopt(socket, 0xffff, option, &value, &size) == 0 && value == valid);
             }
+            int faultValue = 0;
+            std::uint32_t faultSize = sizeof(faultValue);
+            const auto faultCode = static_cast<int>(sceNetGetsockopt(socket, 0xffff, 0x1001, reinterpret_cast<void*>(0x10), &faultSize));
+            Require(faultCode == static_cast<int>(0x8041010eu));
+            faultSize = sizeof(faultValue);
+            Require(sceNetGetsockopt(socket, 0xffff, 0x1001, &faultValue, reinterpret_cast<std::uint32_t*>(0x10)) == static_cast<int>(0x8041010eu));
+            Require(sceNetGetsockopt(socket, 0xffff, 0x1008, &faultValue, reinterpret_cast<std::uint32_t*>(0x10)) == static_cast<int>(0x8041010eu));
             Require(sceNetSocketClose(socket) == 0);
         }
     }
