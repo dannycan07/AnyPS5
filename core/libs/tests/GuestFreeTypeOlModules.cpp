@@ -95,6 +95,28 @@ static void TestModuleWrapperGuestPointers() {
     REQUIRE(errno == 71);
     REQUIRE(writableBlock == nullptr);
     REQUIRE(gCountingFreeCalls == 1);
+
+    void* allocated = &dummyAlloc;
+    errno = 71;
+    REQUIRE(sceFreeTypeOlAlloc_nid_postfix(const_cast<GuestMemoryRec*>(&memoryWithFree), 16, unmappedBlockPtr) == 6);
+    REQUIRE(errno == 71);
+    errno = 71;
+    REQUIRE(sceFreeTypeOlAlloc_nid_postfix(unmappedMemory, 16, &allocated) == 6);
+    REQUIRE(errno == 71);
+    REQUIRE(allocated == nullptr);
+    static void* const readOnlyOutput = &dummyAlloc;
+    gCountingFreeCalls = 0;
+    errno = 71;
+    REQUIRE(sceFreeTypeOlAlloc_nid_postfix(const_cast<GuestMemoryRec*>(&memoryWithFree), 16, const_cast<void**>(&readOnlyOutput)) == 6);
+    REQUIRE(errno == 71);
+    REQUIRE(readOnlyOutput == &dummyAlloc);
+    REQUIRE(gCountingFreeCalls == 0);
+    const GuestMemoryRec memoryWithRelease{nullptr, Allocate, Release, nullptr};
+    errno = 71;
+    REQUIRE(sceFreeTypeOlAlloc_nid_postfix(const_cast<GuestMemoryRec*>(&memoryWithRelease), 16, &allocated) == 0);
+    REQUIRE(errno == 71);
+    REQUIRE(allocated != nullptr);
+    std::free(allocated);
 }
 
 int main() {
