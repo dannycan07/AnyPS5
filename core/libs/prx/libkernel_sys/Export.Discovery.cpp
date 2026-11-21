@@ -22,6 +22,7 @@
 #include <cstring>
 #include <initializer_list>
 #include <optional>
+#include <vector>
 
 namespace {
 
@@ -280,9 +281,11 @@ int APS5_VABI pthread_get_specificarray_np_nid_postfix(PthreadKey key, int total
     constexpr int MaxKeys = 512;
     if (total <= 0 || key < 1 || key > MaxKeys || total > MaxKeys - (key - 1)) return GuestEinval;
     if (!array) return GuestEfault;
+    std::vector<void*> values(static_cast<std::size_t>(total));
     for (int i = 0; i < total; ++i) {
-        array[i] = scePthreadGetspecific(key + i);
+        values[static_cast<std::size_t>(i)] = scePthreadGetspecific(key + i);
     }
+    if (!CopyOutBytes(array, values.data(), values.size() * sizeof(void*))) return GuestEfault;
     return 0;
 }
 

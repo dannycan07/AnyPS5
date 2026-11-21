@@ -263,6 +263,7 @@ void TestAttr() {
             if (pthread_get_specificarray_np_nid_postfix(key, IntMax, nullptr) != GUEST_EINVAL) return false;
         }
         if (pthread_get_specificarray_np_nid_postfix(1, 1, nullptr) != GUEST_EFAULT) return false;
+        if (pthread_get_specificarray_np_nid_postfix(1, 1, reinterpret_cast<void**>(0x10)) != GUEST_EFAULT) return false;
         PthreadKey key1 = 0;
         PthreadKey key2 = 0;
         std::vector<PthreadKey> createdKeys;
