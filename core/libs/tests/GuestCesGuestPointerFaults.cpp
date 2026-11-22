@@ -81,6 +81,10 @@ int main() {
     Require(sceCesIso2022UcsContextInitCopy(UNMAPPED, zeroed) == ERR_INVALID_PARAMETER);
     Require(errno == savedErrno);
 
+    errno = savedErrno;
+    Require(sceCesGbUcsProfileSetUdaMapping(UNMAPPED, 1) == static_cast<int>(0x805C0004));
+    Require(errno == savedErrno);
+
     auto* const unmappedU32 = reinterpret_cast<uint32_t*>(0x10);
     auto* const unmappedU16 = reinterpret_cast<uint16_t*>(0x10);
     auto* const unmappedU8 = reinterpret_cast<uint8_t*>(0x10);

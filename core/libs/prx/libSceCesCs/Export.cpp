@@ -2951,10 +2951,14 @@ int APS5_VABI sceCesGbUcsProfileSet4ByteCharRange(void* profile, int range) {
 }
 
 int APS5_VABI sceCesGbUcsProfileSetUdaMapping(void* profile, int udaMapping) {
-    if (!profile || isEucCn(profile)) return CES_ERROR_INVALID_PROFILE;
-    if (!isGb(profile)) throw std::runtime_error("sceCesGbUcsProfileSetUdaMapping: a profile other than the GB 18030, GBK and EUC-CN ones is not implemented");
+    if (!profile) return CES_ERROR_INVALID_PROFILE;
+    uint8_t sheet[GB_UDA_BYTE + 1];
+    if (!CesGuest::CopyIn(sheet, profile, sizeof(sheet))) return CES_ERROR_INVALID_PROFILE;
+    if (isEucCn(sheet)) return CES_ERROR_INVALID_PROFILE;
+    if (!isGb(sheet)) throw std::runtime_error("sceCesGbUcsProfileSetUdaMapping: a profile other than the GB 18030, GBK and EUC-CN ones is not implemented");
     if (udaMapping != 0 && udaMapping != 1) return CES_ERROR_INVALID_PARAMETER;
-    static_cast<uint8_t*>(profile)[GB_UDA_BYTE] = static_cast<uint8_t>(udaMapping);
+    const uint8_t stored = static_cast<uint8_t>(udaMapping);
+    if (!CesGuest::CopyOut(static_cast<uint8_t*>(profile) + GB_UDA_BYTE, &stored, sizeof(stored))) return CES_ERROR_INVALID_PROFILE;
     return 0;
 }
 
