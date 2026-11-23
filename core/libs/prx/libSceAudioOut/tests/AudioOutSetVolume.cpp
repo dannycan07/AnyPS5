@@ -57,6 +57,7 @@ int main() {
     const int port = sceAudioOutOpen(0x10000000, 0, 0, 256, 48000, 1);
     Require(port > 0, "open valid port");
     Require(sceAudioOutSetVolume(port, 1, nullptr) == INVALID_POINTER, "null volume pointer on valid port returns invalid pointer");
+    Require(sceAudioOutSetVolume(port, 1, reinterpret_cast<int*>(0x10)) == INVALID_POINTER, "unreadable volume pointer returns invalid pointer");
     Require(sceAudioOutSetVolume(port, 1, vol) == 0, "valid port and volume returns success");
     Require(sceAudioOutClose(port) == 0, "close port");
     Require(sceAudioOutSetVolume(port, 1, vol) == INVALID_PORT, "closed port returns invalid port");
