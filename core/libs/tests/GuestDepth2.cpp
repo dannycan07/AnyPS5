@@ -28,6 +28,7 @@ void TestQueryMemory() {
 
     SceDepth2Param param{};
     Require(sceDepth2QueryMemory(&param, nullptr) == nullPointer);
+    Require(sceDepth2QueryMemory(reinterpret_cast<const SceDepth2Param*>(0x10), &mem) == nullPointer);
 
     param.size = 0x30;
     Require(sceDepth2QueryMemory(&param, &mem) == invalidSize);
@@ -137,6 +138,8 @@ void TestQueryMemory() {
     Require(sceDepth2QueryMemory(&param, &mem) == 0);
     Require(mem.size == 0x8000000);
     Require(mem.alignment == 0x40000);
+
+    Require(sceDepth2QueryMemory(&param, reinterpret_cast<SceDepth2Memory*>(0x10)) == nullPointer);
 }
 
 }

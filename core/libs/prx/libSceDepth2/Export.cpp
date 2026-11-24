@@ -65,43 +65,49 @@ int APS5_VABI sceDepth2QueryMemory(const SceDepth2Param* param, SceDepth2Memory*
     if (param == nullptr || mem == nullptr) {
         return ErrorNullPointer;
     }
-    if (param->size != 0x40) {
+    SceDepth2Param local{};
+    if (!GuestCopyIn_nid_no_patch(&local, param, sizeof(local))) {
+        return ErrorNullPointer;
+    }
+    if (local.size != 0x40) {
         return ErrorInvalidSize;
     }
-    if (param->type != 0 && param->type != 2 && param->type != 3 && param->type != 4) {
+    if (local.type != 0 && local.type != 2 && local.type != 3 && local.type != 4) {
         return ErrorInvalidType;
     }
-    if (param->mode != 0 && param->mode != 1) {
+    if (local.mode != 0 && local.mode != 1) {
         return ErrorInvalidMode;
     }
-    if (!IsValidResolution(param->inputWidth, param->inputHeight, param->mode, param->type)) {
-        return param->mode == 1 ? ErrorInvalidInputResolutionMode1 : ErrorInvalidMode;
+    if (!IsValidResolution(local.inputWidth, local.inputHeight, local.mode, local.type)) {
+        return local.mode == 1 ? ErrorInvalidInputResolutionMode1 : ErrorInvalidMode;
     }
-    if (param->unknown0c > 1) {
+    if (local.unknown0c > 1) {
         return ErrorInvalidInputProperty;
     }
-    if (!IsValidResolution(param->outputWidth, param->outputHeight, param->mode, param->type)) {
+    if (!IsValidResolution(local.outputWidth, local.outputHeight, local.mode, local.type)) {
         return ErrorInvalidMode;
     }
-    if (param->unknown18 > 1) {
+    if (local.unknown18 > 1) {
         return ErrorInvalidOutputProperty;
     }
-    if (param->reserved20 != 0 || param->reserved24 != 0) {
+    if (local.reserved20 != 0 || local.reserved24 != 0) {
         return ErrorReservedNotEmpty;
     }
-    if (param->unknown30 >= 7 || param->unknown34 >= 8) {
+    if (local.unknown30 >= 7 || local.unknown34 >= 8) {
         return ErrorInvalidValue;
     }
     uint64_t size = 0;
-    if ((param->inputWidth == 320 && param->inputHeight == 200) || (param->inputWidth == 480 && param->inputHeight == 270)) {
+    if ((local.inputWidth == 320 && local.inputHeight == 200) || (local.inputWidth == 480 && local.inputHeight == 270)) {
         size = 0xc00000;
-    } else if ((param->inputWidth == 640 && param->inputHeight == 400) || (param->inputWidth == 960 && param->inputHeight == 540)) {
+    } else if ((local.inputWidth == 640 && local.inputHeight == 400) || (local.inputWidth == 960 && local.inputHeight == 540)) {
         size = 0x2000000;
-    } else if ((param->inputWidth == 1280 && param->inputHeight == 800) || (param->inputWidth == 1920 && param->inputHeight == 1080)) {
+    } else if ((local.inputWidth == 1280 && local.inputHeight == 800) || (local.inputWidth == 1920 && local.inputHeight == 1080)) {
         size = 0x8000000;
     }
-    mem->size = size;
-    mem->alignment = 0x40000;
+    const SceDepth2Memory result{size, 0x40000};
+    if (!GuestCopyOut_nid_no_patch(mem, &result, sizeof(result))) {
+        return ErrorNullPointer;
+    }
     return 0;
 }
 
