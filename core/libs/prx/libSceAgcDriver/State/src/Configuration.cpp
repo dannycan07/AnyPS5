@@ -39,9 +39,13 @@ int APS5_VABI sceAgcDriverSetHsOffchipParam(uint16_t granularity, uint16_t buffe
 
 int APS5_VABI sceAgcDriverGetHsOffchipParam(uint16_t* granularity, uint16_t* buffering) {
  if (granularity == nullptr || buffering == nullptr) throw std::invalid_argument("sceAgcDriverGetHsOffchipParam: null output");
- std::lock_guard lock(hsOffchipParamMutex);
- *granularity = hsOffchipParam.granularity;
- *buffering = hsOffchipParam.buffering;
+ HsOffchipParam current;
+ {
+  std::lock_guard lock(hsOffchipParamMutex);
+  current = hsOffchipParam;
+ }
+ if (!GuestCopyOut_nid_no_patch(granularity, &current.granularity, sizeof(current.granularity))) throw std::invalid_argument("sceAgcDriverGetHsOffchipParam: unwritable granularity");
+ if (!GuestCopyOut_nid_no_patch(buffering, &current.buffering, sizeof(current.buffering))) throw std::invalid_argument("sceAgcDriverGetHsOffchipParam: unwritable buffering");
  return 0;
 }
 

@@ -53,6 +53,8 @@ void CheckHsOffchipParam() {
     OffchipOutput output;
     Require(Rejects([&] { sceAgcDriverGetHsOffchipParam(nullptr, &output.buffering); }));
     Require(Rejects([&] { sceAgcDriverGetHsOffchipParam(&output.granularity, nullptr); }));
+    Require(Rejects([&] { sceAgcDriverGetHsOffchipParam(reinterpret_cast<uint16_t*>(0x10), &output.buffering); }));
+    Require(Rejects([&] { sceAgcDriverGetHsOffchipParam(&output.granularity, reinterpret_cast<uint16_t*>(0x10)); }));
 }
 
 void RequireRing(uintptr_t expectedBase, uint32_t expectedSize) {
