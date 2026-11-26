@@ -326,25 +326,29 @@ int APS5_VABI sceFontGetKerning(FontHandle fontHandle, std::uint32_t preCode, st
 
 int APS5_VABI sceFontGetRenderScaledKerning(FontHandle fontHandle, std::uint32_t preCode, std::uint32_t code, FontKerning* kerning) {
     if (!kerning) return SCE_FONT_ERROR_INVALID_PARAMETER;
-    *kerning = {};
+    FontKerning localKerning{};
+    int rc = SCE_FONT_ERROR_INVALID_FONT_HANDLE;
     auto* font = GetNativeFont(fontHandle);
     std::uint32_t fontLock = 0;
-    if (!font || font->magic != HANDLE_MAGIC || !AcquireFontLock(font, fontLock)) return SCE_FONT_ERROR_INVALID_FONT_HANDLE;
-    std::uint32_t cachedLock = 0;
-    if (!AcquireCachedStyleLock(font, cachedLock)) {
-        ReleaseFontLock(font, fontLock);
-        return SCE_FONT_ERROR_INVALID_FONT_HANDLE;
+    if (font && font->magic == HANDLE_MAGIC && AcquireFontLock(font, fontLock)) {
+        std::uint32_t cachedLock = 0;
+        if (!AcquireCachedStyleLock(font, cachedLock)) {
+            ReleaseFontLock(font, fontLock);
+            rc = SCE_FONT_ERROR_INVALID_FONT_HANDLE;
+        } else {
+            rc = SCE_FONT_ERROR_NOT_BOUND_RENDERER;
+            if (font->renderer) {
+                float scaleW = 0.0f;
+                float scaleH = 0.0f;
+                rc = StyleStateGetScalePixel(&font->cached_style.state, &scaleW, &scaleH);
+                const FontState* state = TryGetState(fontHandle);
+                if (rc == SCE_FONT_OK && state) LoadKerning(*state, scaleW, scaleH, preCode, code, &localKerning);
+            }
+            ReleaseCachedStyleLock(font, cachedLock);
+            ReleaseFontLock(font, fontLock);
+        }
     }
-    int rc = SCE_FONT_ERROR_NOT_BOUND_RENDERER;
-    if (font->renderer) {
-        float scaleW = 0.0f;
-        float scaleH = 0.0f;
-        rc = StyleStateGetScalePixel(&font->cached_style.state, &scaleW, &scaleH);
-        const FontState* state = TryGetState(fontHandle);
-        if (rc == SCE_FONT_OK && state) LoadKerning(*state, scaleW, scaleH, preCode, code, kerning);
-    }
-    ReleaseCachedStyleLock(font, cachedLock);
-    ReleaseFontLock(font, fontLock);
+    if (!CopyOutGuest(kerning, localKerning)) return SCE_FONT_ERROR_INVALID_PARAMETER;
     return rc;
 }
 

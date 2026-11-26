@@ -1230,6 +1230,10 @@ int main() {
     Require(sceFontGetKerning(font, 'A', 'V', &kerning) == SCE_FONT_OK && KerningIs(kerning, -20.0f));
     kerning = {1.0f, 1.0f, 1.0f, 1.0f};
     Require(sceFontGetRenderScaledKerning(font, 'A', 'V', &kerning) == SCE_FONT_ERROR_NOT_BOUND_RENDERER && KerningIs(kerning, 0.0f));
+    errno = 71;
+    Require(sceFontGetRenderScaledKerning(font, 'A', 'V', reinterpret_cast<FontKerning*>(0x10)) == SCE_FONT_ERROR_INVALID_PARAMETER);
+    Require(errno == 71);
+    Require(sceFontGetRenderScaledKerning(font, 'A', 'V', nullptr) == SCE_FONT_ERROR_INVALID_PARAMETER);
     Require(sceFontBindRenderer(font, renderer) == SCE_FONT_OK);
     Require(sceFontGetRenderScaledKerning(font, 'A', 'V', &kerning) == SCE_FONT_OK && KerningIs(kerning, -20.0f));
     Require(sceFontSetupRenderScalePixel(font, 50.0f, 50.0f) == SCE_FONT_OK);
