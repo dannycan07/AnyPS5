@@ -88,6 +88,8 @@ void CheckLifecycle() {
     std::uint16_t selected = noCandidates;
     Require(sceImeBackendGetCandidateList(&selected, text) == 0 && selected == 0 && text[0] == 0);
     Require(sceImeBackendGetCandidateSelect(&selected) == 0 && selected == 0);
+    Require(sceImeBackendGetCandidateSelect(reinterpret_cast<std::uint16_t*>(0x10)) == kNullArgument);
+    Require(sceImeBackendGetConvertMode(reinterpret_cast<int*>(0x10)) == kNullArgument);
 
     Require(sceImeBackendClose() == 0);
     Require(sceImeBackendGetStatus() == 0);

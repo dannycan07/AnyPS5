@@ -266,8 +266,11 @@ int APS5_VABI sceImeBackendGetCandidateSelect(std::uint16_t* selected) {
     if (state == nullptr) return kNotInitialized;
     if (selected == nullptr) return kNullArgument;
     if (state->status >= 2) return kNotAvailable;
-    *selected = 0;
-    return 0;
+    const std::uint16_t value = 0;
+    const int savedErrno = errno;
+    const bool copied = GuestCopyOut_nid_no_patch(selected, &value, sizeof(value));
+    errno = savedErrno;
+    return copied ? 0 : kNullArgument;
 }
 
 int APS5_VABI sceImeBackendGetConvertMode(int* mode) {
@@ -275,8 +278,11 @@ int APS5_VABI sceImeBackendGetConvertMode(int* mode) {
     State* state = CurrentState();
     if (state == nullptr) return kNotInitialized;
     if (mode == nullptr) return kNullArgument;
-    *mode = state->convertMode;
-    return 0;
+    const int value = state->convertMode;
+    const int savedErrno = errno;
+    const bool copied = GuestCopyOut_nid_no_patch(mode, &value, sizeof(value));
+    errno = savedErrno;
+    return copied ? 0 : kNullArgument;
 }
 
 int APS5_VABI sceImeBackendTemporalConfirm(void) {
